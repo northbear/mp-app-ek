@@ -29,11 +29,10 @@ func ValidateHandler(c *gin.Context) {
 		return
 	}
 
-	log.Printf("username: %s, password: %s\n", data.Username, data.Password)
 	for _, uc := range DATABASE {
 		if data.Username == uc.Username && data.Password == uc.Password {
 			c.JSON(http.StatusOK, gin.H{ "status": "OK" })
-			return 
+			return
 		}
 	}
 	c.JSON(http.StatusNotFound, gin.H{ "status": "Not Found" })
