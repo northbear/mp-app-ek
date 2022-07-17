@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
+	_ "encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -12,9 +15,14 @@ import (
 
 const UserDataName = "AuthorizedUser"
 
+var (
+	PORT string = ":8080"
+	AUTH_SERVICE string = "localhost:10080"
+)
+
 type UserCredentials struct {
-	Username string `form:"username" json:"username" binding:"required"`
-	Password string `form:"password" json:"username" binding:"required"`
+	Username string `json:"username" form:"username" binding:"required"`
+	Password string `json:"username" form:"password" binding:"required"`
 }
 
 func rootHandler(c *gin.Context) {
@@ -34,29 +42,56 @@ func loginHandler(c *gin.Context) {
 		log.Println("Error: don't succeed to parse form data")
 	}
 	log.Printf("received credentials: { username: %s, password: %s }", uc.Username, uc.Password)
-	session.Set("AuthorizedUser", uc.Username)
-	session.Save()
-
-	if uc.Username == "admin" {
+	if QueryAuthService(uc) {
+		session.Set("AuthorizedUser", uc.Username)
+		session.Save()
 		c.Redirect(http.StatusSeeOther, "/restricted")
 	} else {
-		c.String(http.StatusUnauthorized,
-			fmt.Sprintf("Hi %s! You cannot get into this part!\n", uc.Username))
+		c.String(http.StatusUnauthorized, "Hi! But... You are not authorized!")
 	}
 }
 
 func targetHandler(c *gin.Context) {
 	session := sessions.Default(c)
 
-	user := session.Get("AuthorizedUser")
+	user := session.Get("AuthorizedUser").(string)
 	if user == "admin" {
 		c.String(http.StatusOK, "Bingo Admin!!!\n")
 	} else {
-		c.String(http.StatusUnauthorized, "Who are you???\n")
+		c.String(http.StatusOK, "Hi " + user + ", Welcome to our service!\n")
+	}
+}
+
+func QueryAuthService(uc UserCredentials) bool {
+	query := "http://" + AUTH_SERVICE + "/validate"
+
+	data := []byte(fmt.Sprintf("{ \"username\": \"%s\", \"password\": \"%s\" }", uc.Username, uc.Password))
+	// data,err := json.Marshal(uc)
+	// if err != nil {
+	// 	log.Printf("QueryAuthService: Error marshalling data: %s", err)
+	// 	return false
+	// }
+	log.Printf("QueryAuthService: requested data: %s", uc)
+
+	if r, err := http.Post(query, "application/json", bytes.NewReader(data)); err == nil {
+		log.Printf("QueryAuthService: received response on %s: %s", uc.Username, r.Status)
+		return r.StatusCode == http.StatusOK
+	} else {
+		log.Println("QueryAuthService: The request failed:", err)
+		return false
 	}
 }
 
 func main() {
+	if port := os.Getenv("PORT"); port != "" {
+		PORT = port
+		log.Println("The service connected to port " + PORT)
+	}
+	if auth := os.Getenv("AUTH_SERVICE"); auth != "" {
+		AUTH_SERVICE = auth
+		log.Println("Auth service is awaited on " + AUTH_SERVICE)
+	}
+
 	r := gin.Default()
 	store := cookie.NewStore([]byte("secret"))
 	r.Use(sessions.Sessions("mysession", store))
@@ -67,5 +102,5 @@ func main() {
 
 	r.POST("/login", loginHandler)
 
-	r.Run()
+	r.Run(PORT)
 }
