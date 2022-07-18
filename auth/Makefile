@@ -1,6 +1,6 @@
 APP_VERSION    	:= 0.0.1
 
-DOCKER		:= podman
+DOCKER		:= docker
 APP_NAME  	?= mp-app-ek
 IMAGE_NAME     	:= $(APP_NAME)/auth
 
