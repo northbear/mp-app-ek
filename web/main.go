@@ -41,15 +41,15 @@ func loginHandler(c *gin.Context) {
 	if c.ShouldBind(&uc) != nil {
 		log.Println("Error: don't succeed to parse form data")
 	}
-	log.Printf("received credentials: { username: %s, password: ***** }", uc.Username, uc.Password)
+	log.Printf("received credentials: { username: %s, password: ***** }", uc.Username)
 	if QueryAuthService(uc) {
-		log.Printf("The credentials get an approval", uc.Username, uc.Password)
+		log.Printf("The credentials get an approval")
 		session.Set("AuthorizedUser", uc.Username)
 		session.Save()
 		c.Redirect(http.StatusSeeOther, "/restricted")
 	} else {
-		log.Printf("The credentials doesn't get an approval", uc.Username, uc.Password)
-		c.String(http.StatusUnauthorized, "Hi! But... You are not authorized!")
+		log.Printf("The credentials doesn't get an approval")
+		c.String(http.StatusUnauthorized, "Hi! Great to meet you, but you are not authorized.")
 	}
 }
 
