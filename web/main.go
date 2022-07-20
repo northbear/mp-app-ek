@@ -68,11 +68,6 @@ func QueryAuthService(uc UserCredentials) bool {
 	query := "http://" + AUTH_SERVICE + "/validate"
 
 	data := []byte(fmt.Sprintf("{ \"username\": \"%s\", \"password\": \"%s\" }", uc.Username, uc.Password))
-	// data,err := json.Marshal(uc)
-	// if err != nil {
-	// 	log.Printf("QueryAuthService: Error marshalling data: %s", err)
-	// 	return false
-	// }
 	log.Printf("QueryAuthService: requested data: %s", uc)
 
 	if r, err := http.Post(query, "application/json", bytes.NewReader(data)); err == nil {
@@ -96,10 +91,9 @@ func main() {
 
 	r := gin.Default()
 	store := cookie.NewStore([]byte("secret"))
-	r.Use(sessions.Sessions("mysession", store))
+	r.Use(sessions.Sessions("mp_session", store))
 
-	r.GET("/",                rootHandler)
-	r.GET("/login_form", loginFormHandler)
+	r.GET("/", loginFormHandler)
 	r.GET("/restricted",    targetHandler)
 
 	r.POST("/login", loginHandler)
