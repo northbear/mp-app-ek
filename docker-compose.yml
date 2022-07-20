@@ -11,6 +11,8 @@ services:
     image: mp-app-ek/auth:0.0.1
     environment:
       PORT: ':20080'
+      MP_APP_USER_0: 'admin:admin'
+      MP_APP_USER_1: 'foo@bar.com:pas5w0rd'
     expose:
       - '20080'
   ### Monitoring
