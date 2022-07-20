@@ -8,7 +8,7 @@ services:
         ports:
             - "9200:9200"
         volumes:
-            - data/es:/usr/share/elasticsearch/data
+            - ./data/es:/usr/share/elasticsearch/data
 
     kibana:
         image: "docker.elastic.co/kibana/kibana:7.2.0"
@@ -18,10 +18,9 @@ services:
     filebeat:
         image: "docker.elastic.co/beats/filebeat:7.2.0"
         user: root
+        command:
+            - "-strict.perms=false"
         volumes:
-            - data/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+            - ./data/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
             - /var/lib/docker:/var/lib/docker:ro
             - /var/run/docker.sock:/var/run/docker.sock
-
-volumes:
-    elasticsearch_data:
