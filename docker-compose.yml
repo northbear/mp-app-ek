@@ -1,0 +1,38 @@
+version: "3.6"
+
+services:
+  web:
+    image: mp-app-ek/web:0.0.1
+    environment:
+      AUTH_SERVICE: 'auth:20080'
+    ports:
+      - '3000:8080'
+  auth:
+    image: mp-app-ek/auth:0.0.1
+    environment:
+      PORT: ':20080'
+    expose:
+      - '20080'
+  ### Monitoring
+  elasticsearch:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:7.2.0"
+    environment:
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "discovery.type=single-node"
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./data/es:/usr/share/elasticsearch/data
+  kibana:
+    image: "docker.elastic.co/kibana/kibana:7.2.0"
+    ports:
+      - "5601:5601"
+  filebeat:
+    image: "docker.elastic.co/beats/filebeat:7.2.0"
+    user: root
+    command:
+      - "-strict.perms=false"
+    volumes:
+      - ./data/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock
