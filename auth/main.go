@@ -22,8 +22,13 @@ func (ud UserDatabase) Update(k string, v string) {
 
 func (ud UserDatabase) Validate(k string, v string) bool {
 	if secret, ok := ud[k]; ok {
-		return secret == v
+		if secret == v {
+			return true
+		}
+		log.Println("Password doesn't match")
+		return false
 	}
+	log.Println("Credentials not found")
 	return false
 }
 
@@ -50,6 +55,7 @@ func LoadUserDatabaseFromEnv(ud *UserDatabase) {
 			continue
 		}
 		ud.Update(creds[0], creds[1])
+		log.Println("Updated credentials: ", creds[0])
 	}
 }
 
@@ -61,6 +67,7 @@ func ValidateHandler(c *gin.Context) {
 		return
 	}
 
+	log.Println("Validating credentials: ", data.Username)
 	if DATABASE.Validate(data.Username, data.Password) {
 		c.JSON(http.StatusOK, gin.H{ "status": "OK" })
 		return
